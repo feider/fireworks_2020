@@ -9,15 +9,19 @@ void main_loop();
 class Globals;
 class Rocket;
 
+class Object;
 class Rocket;
 class Particle;
 class Fragment;
 
 class RocketFactory;
 
-std::vector<Particle*> particles;
-std::vector<Rocket*> rockets;
-std::vector<Fragment*> fragments;
+std::vector<Object*> objects;
+// std::vector<Particle*> objects;
+// std::vector<Rocket*> objects;
+// std::vector<Fragment*> objects;
+
+
 
 class Globals
 {
@@ -37,7 +41,7 @@ public:
     unsigned int ticks_passed;
     double time_mult;
 
-    std::vector<Rocket*> rockets;
+    std::vector<Rocket*> objects;
 
 
 
@@ -53,14 +57,20 @@ public:
 
 Globals g;
 
-class Particle
+class Object
+{
+    public:
+    bool dead;
+    virtual void update(){}
+};
+
+class Particle : public Object
 {
 public:
     int x, y;
     int red, green, blue;
     unsigned int solid;
     unsigned int decay;
-    bool dead;
 
     Particle(int x, int y, int red, int green, int blue, unsigned int solid, unsigned int decay)
     {
@@ -76,7 +86,7 @@ public:
 
 
 
-    void update_and_render()
+    void update()
     {
         unsigned int ticks = g.last_ticks;
 
@@ -104,20 +114,16 @@ public:
 
 };
 
-class Rocket
+class Rocket : public Object
 {
 public:
     double x, y, sx, sy, boom;
-    bool dead;
-    virtual void update() {}
 };
 
-class Fragment
+class Fragment : public Object
 {
 public:
     double x, y, sx, sy;
-    bool dead;
-    virtual void update() {}
 };
 
 class StandardFragment: public Fragment
@@ -142,7 +148,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, red, green, blue, 100, 1000));
+        objects.push_back(new Particle(x, y, red, green, blue, 100, 1000));
         if(g.last_ticks> gone)
             this->dead = true;
     }
@@ -166,7 +172,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, 255, 255, 100, 100, 100));
+        objects.push_back(new Particle(x, y, 255, 255, 100, 100, 100));
         if(g.last_ticks> gone)
             this->dead = true;
     }
@@ -190,7 +196,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, 30, 30, 20, 100, 100));
+        objects.push_back(new Particle(x, y, 30, 30, 20, 100, 100));
         if(g.last_ticks> gone)
         {
             this->dead = true;
@@ -205,7 +211,7 @@ public:
                 double rad = (double) deg * 3.14159 / 180.0;
                 double sx = sin(rad) * (double) speed;
                 double sy = cos(rad) * (double) speed;
-                fragments.push_back(new SuperFancyFragment(x, y, sx, sy, time));
+                objects.push_back(new SuperFancyFragment(x, y, sx, sy, time));
             }
         }
     }
@@ -228,7 +234,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
         if(g.last_ticks> boom)
         {
             int speed = rand()%20+50;
@@ -262,7 +268,7 @@ public:
                 }
 
 
-                fragments.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
+                objects.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
             }
             this->dead = true;
         }
@@ -286,7 +292,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
         if(g.last_ticks> boom)
         {
             int speed = rand()%20+50;
@@ -320,7 +326,7 @@ public:
                 }
 
 
-                fragments.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
+                objects.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
             }
             this->dead = true;
         }
@@ -344,7 +350,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        particles.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
         if(g.last_ticks> boom)
         {
             int speed = rand()%30+50;
@@ -357,7 +363,7 @@ public:
                 double sy = cos(rad) * (double) speed;
 
 
-                fragments.push_back(new FancyFragment(x, y, sx, sy,  time));
+                objects.push_back(new FancyFragment(x, y, sx, sy,  time));
             }
             this->dead = true;
         }
@@ -424,34 +430,34 @@ public:
             this->frps = 0.7;
         }
 
-        //normal rockets
+        //normal objects
         {
             int rps = mult*(this->rps * g.time_mult);
             int randval = rand() % mult;
             if (randval < rps)
             {
-                rockets.push_back(new StandardRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
+                objects.push_back(new StandardRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
             }
         }
 
-        //rainbow rockets
+        //rainbow objects
         {
             int rps = mult*(this->rrps * g.time_mult);
             int randval = rand() % mult;
             if (randval < rps)
             {
-                rockets.push_back(new RainbowRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
+                objects.push_back(new RainbowRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
             }
         }
 
-        //fancy rockets
+        //fancy objects
         {
 
             int rps = mult*(this->frps * g.time_mult);
             int randval = rand() % mult;
             if (randval < rps)
             {
-                rockets.push_back(new FancyRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3800));
+                objects.push_back(new FancyRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3800));
             }
         }
 
@@ -477,10 +483,10 @@ int main() {
 
 
     // Particle * p = new Particle(10, 10, 255, 0, 0, 1000, 3000);
-    // particles.push_back(p);
+    // objects.push_back(p);
 
     // Rocket * r = new StandardRocket(400, 300, 10, -20, 5000);
-    // rockets.push_back(r);
+    // objects.push_back(r);
     //
     
     while(!g.k[SDL_SCANCODE_RETURN])
@@ -524,48 +530,20 @@ void main_loop()
 
     rf.update();
 
-    for( int i = 0; i < rockets.size(); i++)
-    {
-        Rocket * r = rockets[i];
-        r->update();
-        if(r->dead)
-        {
-            delete r;
-            rockets[i] = nullptr;
-        }
-    }
-    rockets.erase(std::remove_if(std::begin(rockets), std::end(rockets), [](Rocket * r) {
-        return r == nullptr;
-    }),
-    std::end(rockets));
 
-    for( int i = 0; i<particles.size(); i++)
+    for( int i = 0; i<objects.size(); i++)
     {
-        particles[i]->update_and_render();
-        if(particles[i]->dead)
+        objects[i]->update();
+        if(objects[i]->dead)
         {
-            delete particles[i];
-            particles[i] = nullptr;
+            delete objects[i];
+            objects[i] = nullptr;
         }
     }
-    particles.erase(std::remove_if(std::begin(particles), std::end(particles), [](Particle * p) {
-        return p == nullptr;
+    objects.erase(std::remove_if(std::begin(objects), std::end(objects), [](Object * o) {
+        return o == nullptr;
     }),
-    std::end(particles));
-
-    for( int i = 0; i<fragments.size(); i++)
-    {
-        fragments[i]->update();
-        if(fragments[i]->dead)
-        {
-            delete fragments[i];
-            fragments[i] = nullptr;
-        }
-    }
-    fragments.erase(std::remove_if(std::begin(fragments), std::end(fragments), [](Fragment * f) {
-        return f == nullptr;
-    }),
-    std::end(fragments));
+    std::end(objects));
 
     SDL_RenderPresent(g.r);
     SDL_Delay(10);
