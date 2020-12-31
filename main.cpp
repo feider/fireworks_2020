@@ -17,10 +17,6 @@ class Fragment;
 class RocketFactory;
 
 std::vector<Object*> objects;
-// std::vector<Particle*> objects;
-// std::vector<Rocket*> objects;
-// std::vector<Fragment*> objects;
-
 
 
 class Globals
@@ -59,9 +55,9 @@ Globals g;
 
 class Object
 {
-    public:
+public:
     bool dead;
-    virtual void update(){}
+    virtual void update() {}
 };
 
 class Particle : public Object
@@ -89,21 +85,23 @@ public:
     void update()
     {
         unsigned int ticks = g.last_ticks;
+        int red = this->red;
+        int blue = this->blue;
+        int green = this->green;
 
-        if (ticks < solid)
-        {
-            SDL_SetRenderDrawColor(g.r, red, green, blue, 0);
-            SDL_RenderDrawPoint(g.r, x, y);
-        }
-
-        else if (ticks < decay)
+        if(ticks > solid)
         {
             float perc = 1.0- ((float) (ticks-solid) / (float) (decay-solid));
-            int red = this->red*perc;
-            int blue = this->blue*perc;
-            int green = this->green*perc;
-            SDL_SetRenderDrawColor(g.r, red, green, blue, 0);
+            red = red*perc;
+            blue = blue*perc;
+            green = green*perc;
+        }
+
+        if (ticks < decay)
+        {
+            SDL_SetRenderDrawColor(g.r, red, green, blue, 255);
             SDL_RenderDrawPoint(g.r, x, y);
+            
         }
         else
         {
@@ -148,7 +146,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, red, green, blue, 100, 1000));
+        objects.push_back(new Particle(x, y, red, green, blue, rand() % 75, rand() % 200 + 200));
         if(g.last_ticks> gone)
             this->dead = true;
     }
@@ -395,20 +393,20 @@ public:
 
         if(tss < m*5000)
         {
-            this->rps = 0.4;
+            this->rps = 1.2;
             this->rrps = 0.0;
             this->frps = 0.0;
         }
         else if(tss < m*11000)
         {
-            this->rps = 0.8;
+            this->rps = 2.4;
             this->rrps = 0.0;
             this->frps = 0.0;
         }
         else if(tss < m*22000)
         {
             this->rps = 0.7;
-            this->rrps = 0.2;
+            this->rrps = 0.5;
             this->frps = 0.0;
         }
         else if(tss < m*33000)
@@ -419,14 +417,14 @@ public:
         }
         else if(tss < m*44000)
         {
-            this->rps = 0.3;
+            this->rps = 0.9;
             this->rrps = 0.0;
             this->frps = 0.9;
         }
         else
         {
-            this->rps = 0.5;
-            this->rrps = 0.1;
+            this->rps = 1.3;
+            this->rrps = 0.3;
             this->frps = 0.7;
         }
 
@@ -476,19 +474,10 @@ int main() {
     g.height = 600;
 
     SDL_Init(SDL_INIT_EVERYTHING);
-
     SDL_CreateWindowAndRenderer(g.width, g.height, 0, &g.w, &g.r);
-
     g.k = SDL_GetKeyboardState(0);
 
-
-    // Particle * p = new Particle(10, 10, 255, 0, 0, 1000, 3000);
-    // objects.push_back(p);
-
-    // Rocket * r = new StandardRocket(400, 300, 10, -20, 5000);
-    // objects.push_back(r);
-    //
-    
+    // wait for user input to start
     while(!g.k[SDL_SCANCODE_RETURN])
     {
         SDL_Event e;
@@ -497,12 +486,11 @@ int main() {
             if(e.type == SDL_QUIT)
                 g.end=true;
         }
-    }   
-
+    }
     g.ticks_begin = SDL_GetTicks();
     g.update_ticks();
 
-
+    // main loop
     while(!g.end)
         main_loop();
 
@@ -513,7 +501,7 @@ int main() {
 
 void main_loop()
 {
-    SDL_SetRenderDrawColor(g.r, 0, 0, 0, 0);
+    SDL_SetRenderDrawColor(g.r, 0, 0, 0, 255);
     SDL_RenderClear(g.r);
     SDL_Event e;
     while(SDL_PollEvent(&e))
@@ -525,12 +513,12 @@ void main_loop()
         g.end=true;
 
 
-
     g.update_ticks();
 
+    // shoot new rocket
     rf.update();
 
-
+    // update all objects
     for( int i = 0; i<objects.size(); i++)
     {
         objects[i]->update();
@@ -540,13 +528,17 @@ void main_loop()
             objects[i] = nullptr;
         }
     }
+
+    // delete nullptr objects
     objects.erase(std::remove_if(std::begin(objects), std::end(objects), [](Object * o) {
         return o == nullptr;
     }),
     std::end(objects));
 
     SDL_RenderPresent(g.r);
-    SDL_Delay(10);
+
+    // don't overheat computers
+    SDL_Delay(1000/200);
 }
 
 
