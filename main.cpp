@@ -478,16 +478,6 @@ int main() {
     SDL_CreateWindowAndRenderer(g.width, g.height, 0, &g.w, &g.r);
     g.k = SDL_GetKeyboardState(0);
 
-    // wait for user input to start
-    while(!g.k[SDL_SCANCODE_RETURN])
-    {
-        SDL_Event e;
-        while(SDL_PollEvent(&e))
-        {
-            if(e.type == SDL_QUIT)
-                g.end=true;
-        }
-    }
     g.ticks_begin = SDL_GetTicks();
     g.update_ticks();
 
