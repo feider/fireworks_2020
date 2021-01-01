@@ -520,11 +520,9 @@ void main_loop()
     rf.update();
 
     // update all objects
-    for( int i = 0; i<objects.size(); i++)
-    {
-        objects[i]->update();
-    }
-    
+    for (auto o: objects)
+        o->update();
+
     // delete nullptr objects
     objects.erase(std::remove_if(std::begin(objects), std::end(objects), [](std::shared_ptr<Object> o) {
         return o->dead;
