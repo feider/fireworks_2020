@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <memory>
 
 void main_loop();
 
@@ -16,7 +17,7 @@ class Fragment;
 
 class RocketFactory;
 
-std::vector<Object*> objects;
+std::vector<std::shared_ptr<Object>> objects;
 
 
 class Globals
@@ -146,7 +147,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, red, green, blue, rand() % 75, rand() % 200 + 200));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, red, green, blue, rand() % 75, rand() % 200 + 200)));
         if(g.last_ticks> gone)
             this->dead = true;
     }
@@ -170,7 +171,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, 255, 255, 100, 100, 100));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, 255, 255, 100, 100, 100)));
         if(g.last_ticks> gone)
             this->dead = true;
     }
@@ -194,7 +195,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, 30, 30, 20, 100, 100));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, 30, 30, 20, 100, 100)));
         if(g.last_ticks> gone)
         {
             this->dead = true;
@@ -209,7 +210,7 @@ public:
                 double rad = (double) deg * 3.14159 / 180.0;
                 double sx = sin(rad) * (double) speed;
                 double sy = cos(rad) * (double) speed;
-                objects.push_back(new SuperFancyFragment(x, y, sx, sy, time));
+                objects.push_back(std::shared_ptr<Object> (new SuperFancyFragment(x, y, sx, sy, time)));
             }
         }
     }
@@ -232,7 +233,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, 100, 100, 100, 1, 1000)));
         if(g.last_ticks> boom)
         {
             int speed = rand()%20+50;
@@ -266,7 +267,7 @@ public:
                 }
 
 
-                objects.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
+                objects.push_back(std::shared_ptr<Object> (new StandardFragment(x, y, sx, sy, red, green, blue, time)));
             }
             this->dead = true;
         }
@@ -290,7 +291,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, 100, 100, 100, 1, 1000)));
         if(g.last_ticks> boom)
         {
             int speed = rand()%20+50;
@@ -324,7 +325,7 @@ public:
                 }
 
 
-                objects.push_back(new StandardFragment(x, y, sx, sy, red, green, blue, time));
+                objects.push_back(std::shared_ptr<Object> (new StandardFragment(x, y, sx, sy, red, green, blue, time)));
             }
             this->dead = true;
         }
@@ -348,7 +349,7 @@ public:
     {
         x += sx*g.time_mult;
         y += sy*g.time_mult;
-        objects.push_back(new Particle(x, y, 100, 100, 100, 1, 1000));
+        objects.push_back(std::shared_ptr<Object> (new Particle(x, y, 100, 100, 100, 1, 1000)));
         if(g.last_ticks> boom)
         {
             int speed = rand()%30+50;
@@ -361,7 +362,7 @@ public:
                 double sy = cos(rad) * (double) speed;
 
 
-                objects.push_back(new FancyFragment(x, y, sx, sy,  time));
+                objects.push_back(std::shared_ptr<Object> (new FancyFragment(x, y, sx, sy,  time)));
             }
             this->dead = true;
         }
@@ -434,7 +435,7 @@ public:
             int randval = rand() % mult;
             if (randval < rps)
             {
-                objects.push_back(new StandardRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
+                objects.push_back(std::shared_ptr<Object> (new StandardRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000)));
             }
         }
 
@@ -444,7 +445,7 @@ public:
             int randval = rand() % mult;
             if (randval < rps)
             {
-                objects.push_back(new RainbowRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000));
+                objects.push_back(std::shared_ptr<Object> (new RainbowRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3000)));
             }
         }
 
@@ -455,7 +456,7 @@ public:
             int randval = rand() % mult;
             if (randval < rps)
             {
-                objects.push_back(new FancyRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3800));
+                objects.push_back(std::shared_ptr<Object> (new FancyRocket(rand() % g.width, g.height, rand() % 20 - 10, -(rand() % 30 + 60), 3800)));
             }
         }
 
@@ -522,16 +523,11 @@ void main_loop()
     for( int i = 0; i<objects.size(); i++)
     {
         objects[i]->update();
-        if(objects[i]->dead)
-        {
-            delete objects[i];
-            objects[i] = nullptr;
-        }
     }
-
+    
     // delete nullptr objects
-    objects.erase(std::remove_if(std::begin(objects), std::end(objects), [](Object * o) {
-        return o == nullptr;
+    objects.erase(std::remove_if(std::begin(objects), std::end(objects), [](std::shared_ptr<Object> o) {
+        return o->dead;
     }),
     std::end(objects));
 

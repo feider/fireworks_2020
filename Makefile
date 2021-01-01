@@ -1,2 +1,2 @@
 main: main.cpp
-	g++ main.cpp -g -lSDL2 -o main
+	g++ main.cpp -O3 -lSDL2 -o main
